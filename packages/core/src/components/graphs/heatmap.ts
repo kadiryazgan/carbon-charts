@@ -113,11 +113,12 @@ export class Heatmap extends Component {
 			.attr('width', this.xBandwidth)
 			.attr('height', this.yBandwidth)
 			.style('fill', (d: any) => {
+				const domainIdentifier = this.services.cartesianScales.getDomainIdentifier(d)
 				// Check if a valid value exists
 				if (d.index === -1 || d.value === null) {
 					return `url(#${patternID})`
 				}
-				return this.model.getFillColor(Number(d.value))
+				return this.model.getFillColor(Number(d.value), d[domainIdentifier], d)
 			})
 			.attr('aria-label', (d: any) => d.value)
 
@@ -203,7 +204,8 @@ export class Heatmap extends Component {
 		const self = this
 		const { cartesianScales } = this.services
 		const options = this.getOptions()
-		const totalLabel = get(options, 'tooltip.totalLabel')
+		const totalLabel =
+			get(options, 'locale.translations.total') || get(options, 'tooltip.totalLabel') || 'Total'
 
 		const domainIdentifier = cartesianScales.getDomainIdentifier()
 		const rangeIdentifier = cartesianScales.getRangeIdentifier()
@@ -253,7 +255,7 @@ export class Heatmap extends Component {
 								value: datum[rangeIdentifier]
 							},
 							{
-								label: totalLabel || 'Total',
+								label: totalLabel,
 								value: datum['value'],
 								color: hoveredElement.style('fill')
 							}

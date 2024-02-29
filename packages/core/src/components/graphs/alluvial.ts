@@ -211,8 +211,11 @@ export class Alluvial extends Component {
 				if (isGradientAllowed) {
 					return `url(#${this.gradient_id}-link-${d.index})`
 				}
-
-				return this.model.getFillColor(d.source.name)
+				return this.model.getFillColor(d.source.name, null, {
+					...d,
+					source: d.source.name,
+					target: d.target.name
+				})
 			})
 			.attr('stroke-width', (d: any) => Math.max(1, d.width))
 			.style('stroke-opacity', alluvialConfigs.opacity.default)
@@ -252,6 +255,7 @@ export class Alluvial extends Component {
 				this.services.domUtils.generateElementIDString(`alluvial-node-title-${d.index}`)
 			)
 
+		const { code: localeCode, number: numberFormatter } = getProperty(options, 'locale')
 		// Node title - text
 		textNode
 			.append('text')
@@ -267,7 +271,7 @@ export class Alluvial extends Component {
 			// shift 13 pixels down to fit background container
 			.attr('dy', 13)
 			.text((d: any) => {
-				return `${d.name} (${d.value})`
+				return `${d.name} (${numberFormatter(d.value, localeCode)})`
 			})
 			.attr('aria-label', (d: any) => {
 				return `${d.name} (${d.value})`
@@ -327,6 +331,7 @@ export class Alluvial extends Component {
 	addLineEventListener() {
 		const options = this.getOptions()
 		const self = this
+		const { number: numberFormatter, code: localeCode } = getProperty(this.getOptions(), 'locale')
 
 		// Set delay to counter flashy behaviour
 		const debouncedLineHighlight = debounce((link, event = 'mouseover') => {
@@ -379,7 +384,10 @@ export class Alluvial extends Component {
 					items: [
 						{
 							label: datum.target.name,
-							value: datum.value + (options.alluvial.units ? ` ${options.alluvial.units}` : ''),
+							value:
+								(numberFormatter(datum.value, localeCode)
+									? `${numberFormatter(datum.value, localeCode)}`
+									: '-') + (options.alluvial.units ? ` ${options.alluvial.units}` : ''),
 							color: strokeColor,
 							labelIcon: self.getRightArrowIcon()
 						}

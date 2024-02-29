@@ -94,7 +94,12 @@ export class Donut extends Pie {
 
 		return (t: any) => {
 			const { numberFormatter } = options.donut.center
-			d3Ref.text(numberFormatter(i(t)))
+			if (numberFormatter) {
+				d3Ref.text(numberFormatter(i(t)))
+			} else {
+				const { code: localeCode, number: localeNumberFormatter } = getProperty(options, 'locale')
+				d3Ref.text(localeNumberFormatter(Math.floor(i(t)), localeCode))
+			}
 		}
 	}
 }

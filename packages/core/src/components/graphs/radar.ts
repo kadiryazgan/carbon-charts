@@ -94,7 +94,8 @@ export class Radar extends Component {
 			.nice(yTicksNumber)
 		const yTicks = yScale.ticks(yTicksNumber)
 
-		const colorScale = (group: string): string => this.model.getFillColor(group)
+		const colorScale = (group: string, key?: any, data?: any): string =>
+			this.model.getFillColor(group, key, data)
 
 		// constructs a new radial line generator
 		// the angle accessor returns the angle in radians with 0° at -y (12 o’clock)
@@ -366,9 +367,9 @@ export class Radar extends Component {
 							? () => `translate(${c.x}, ${c.y}) scale(${1 + Math.random() * 0.35})`
 							: `translate(${c.x}, ${c.y})`
 					)
-					.style('fill', (group: any) => colorScale(group.name))
+					.style('fill', (group: any) => colorScale(group.name, null, group.data))
 					.style('fill-opacity', radarConfigs.opacity.selected)
-					.style('stroke', (group: any) => colorScale(group.name))
+					.style('stroke', (group: any) => colorScale(group.name, null, group.data))
 					.call((selection: any) => {
 						const selectionUpdate = selection.transition().call((t: any) =>
 							this.services.transitions.setupTransition({
@@ -397,8 +398,8 @@ export class Radar extends Component {
 							originalClassName: 'blob'
 						})
 					)
-					.style('fill', (group: any) => colorScale(group.name))
-					.style('stroke', (group: any) => colorScale(group.name))
+					.style('fill', (group: any) => colorScale(group.name, null, group.data))
+					.style('stroke', (group: any) => colorScale(group.name, null, group.data))
 				update.call((selection: any) =>
 					selection
 						.transition()
@@ -487,6 +488,7 @@ export class Radar extends Component {
 			.attr('transform', (key: any) => `rotate(${radToDeg(xScale(key))}, ${c.x}, ${c.y})`)
 
 		// y labels (show only the min and the max labels)
+		const { code: localeCode, number: numberFormatter } = getProperty(options, 'locale')
 		const yLabels = DOMUtils.appendOrSelect(svg, 'g.y-labels').attr('role', Roles.GROUP)
 		const yLabelUpdate = yLabels.selectAll('text').data(extent(yTicks))
 		yLabelUpdate.join(
@@ -494,7 +496,7 @@ export class Radar extends Component {
 				enter
 					.append('text')
 					.attr('opacity', 0)
-					.text((tick: any) => tick)
+					.text((tick: any) => numberFormatter(tick, localeCode))
 					.attr(
 						'x',
 						(tick: any) => polarToCartesianCoords(-Math.PI / 2, yScale(tick), c).x + yLabelPadding
@@ -717,7 +719,7 @@ export class Radar extends Component {
 						.map((d: any) => ({
 							label: d[groupMapsTo],
 							value: d[valueMapsTo],
-							color: self.model.getFillColor(d[groupMapsTo]),
+							color: self.model.getFillColor(d[groupMapsTo], null, d),
 							class: self.model.getColorClassName({
 								classNameTypes: [ColorClassNameTypes.TOOLTIP],
 								dataGroupName: d[groupMapsTo]
